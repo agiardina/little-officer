@@ -41,9 +41,23 @@
   (rows->col (query->rows query-res) col))
 
 (define (sqldate->string date)
-  (let ([year (~a (sql-date-year date))]
-        [month (~a (sql-date-month date) #:min-width 2 #:pad-string "0" #:align 'right)]
-        [day (~a (sql-date-day date) #:min-width 2 #:pad-string "0" #:align 'right)])
-    (~a year month day #:separator "-")))
+    (cond 
+        [(sql-date? date)
+            (let ([year (~a (sql-date-year date))]
+                  [month (~a (sql-date-month date) #:min-width 2 #:pad-string "0" #:align 'right)]
+                  [day (~a (sql-date-day date) #:min-width 2 #:pad-string "0" #:align 'right)])
+            
+                (~a year month day #:separator "-"))]
+        [else ""]))
+
+(define (insert table record) 
+    (let* ([f-list (hash->list record)]
+          [keys (map car f-list)]
+          [values (map cdr f-list)]
+          [cols (string-join keys ",")]
+          [placeholders (string-join (make-list (length values) "?") ",")]
+          [str-insert (string-append "INSERT INTO " table "(" cols ") VALUES (" placeholders ")" )])
+
+        (apply query (flatten (list *conn* str-insert values)))))
 
 (provide (all-defined-out))

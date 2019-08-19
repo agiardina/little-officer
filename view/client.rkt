@@ -40,10 +40,6 @@
     (define (show) (send window show #t))
     (define (hide) (send window show #f))
 
-    (listen (lambda (evname)
-                (case evname
-                [("NEWCLIENT") (hide)])))
-
     window
 )
 

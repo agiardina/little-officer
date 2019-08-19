@@ -4,6 +4,7 @@
          "view.rkt"
          "deal.rkt"
          (prefix-in model: "../model/deals.rkt")
+         "../utils.rkt"
          "../store.rkt"
          "../actions/deals.rkt"
          "../eventbus.rkt"
@@ -26,16 +27,16 @@
             (if deals
                 (let* ( [id (map number->string (rows->col deals "id"))]
                         [description (rows->col deals "description")]
-                        [value (map number->string (rows->col deals "value"))]
+                        [value (map number?->string (rows->col deals "value"))]
                         [start_date (map sqldate->string (rows->col deals "start_date"))]
                         [status (rows->col deals "deal_status")])
                     (send deals-list-box set id description value start_date status))
-
-                (send deals-list-box set null null null null null))))            
+                (send deals-list-box set null null null null null)
+                )))            
       
     (listen (lambda (evname)
             (case evname
-                [("CLIENTCHANGED") (populate-deals)])))
+                [("CLIENTCHANGED" "DEALSLOADED") (populate-deals)])))
 
     (populate-deals)
             

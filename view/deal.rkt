@@ -1,6 +1,7 @@
 #lang racket/gui
 
 (require "view.rkt"
+         "../store.rkt"
          "../actions/deal.rkt"
          "../eventbus.rkt")
 
@@ -26,16 +27,20 @@
     (define documents (make-form "Documents" tabs))
     (define panels (list form payments documents))
 
+    (define (make-status label parent)
+        (make-select label parent (<-store 'deal-statuses)))
+
     (define fields 
         (make-fields "Deal"
            form
-           (list "id" "description" "value" "start_date" "end_date")
-           (list "ID" "Description" "Value" "Start" "End")
-           (list input input input make-date make-date)))
+           (list "id" "description" "deal_status" "value" "start_date" "end_date")
+           (list "ID" "Description" "Status" "Value" "Start" "End")
+           (list input input make-status input make-date make-date)))
 
     (define bottom-toolbar (make-toolbar form))
     (add-full-spacer bottom-toolbar)
-    (make-button "Save" bottom-toolbar #f)
+    (make-button "Remove" bottom-toolbar delete-deal)
+    (make-button "Save" bottom-toolbar (lambda () (save-deal (fields->values fields))))
 
     (define update-ui (bind-fields fields 'deal))
 

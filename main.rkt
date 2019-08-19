@@ -3,6 +3,7 @@
 (require data/gvector)
 (require "config.rkt"
          "eventbus.rkt"
+         "store.rkt"
          "actions/dbsetup.rkt"
          "view/dbsetup.rkt"
          "view/clients.rkt"
@@ -26,8 +27,13 @@
         (hide (gvector-remove-last! history))
         (show (current-window))))
 
-(define (show window) (send window show #t))
+(define (show window) 
+    (begin
+        (send window refresh)
+        (send window show #t)))
+
 (define (hide window) (send window show #f))
+
 (define (current-window)
     (if (> (gvector-count history) 0)
         (gvector-ref history (- (gvector-count history) 1))
@@ -53,6 +59,7 @@
 
 (listen (lambda (evname)
             (case evname
+                [("DBREADY") (->store 'db-ready #t)]
                 [("BACK") (back)]
                 [("OPENCLIENT") (open-window 'client)]
                 [("OPENDEAL") (open-window 'deal)]

@@ -9,6 +9,8 @@
 
 (define events 
     (hash
+        'db-ready #f
+        'deal-statuses #f
         'client-id "CLIENTCHANGED"
         'client "CLIENTLOADED"
         'deals "DEALSLOADED"
@@ -18,9 +20,11 @@
 
 (define on-update-cascade 
     (hash 
+        'db-ready (list (list 'deal-statuses deals:get-deal-statuses))
         'client-id (list (list 'client clients:get-client-by-id)
                          (list 'deal-id #f)
                          (list 'deals deals:get-client-deals))
+        'deals (list (list 'deal-id #f))
         'deal-id (list (list 'deal deals:get-deal))
     ))
 
@@ -41,10 +45,19 @@
                             (->store uk 
                                 (cond
                                     [(not val) #f]
-                                    [(procedure? uv) (call uv val)]
+                                    [(and (procedure? uv) (eq? 0 (procedure-arity uv))) (uv)]
+                                    [(and (procedure? uv) (eq? 1 (procedure-arity uv))) (call uv val)]
                                     [else uv]))))
                         (hash-ref on-update-cascade key)))
-                (dispatch event))]
+                (when event (dispatch event))
+                )]
         [else (raise (format "Invalid key ~a" key))]))
+
+(listen (lambda (evname)
+    (case evname    
+
+        [("NEWDEAL" "DEALDELETED") (->store 'deals (deals:get-client-deals (<-store 'client-id)))]
+
+        )))
 
 (provide <-store ->store)

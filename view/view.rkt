@@ -1,17 +1,16 @@
 #lang racket/gui
 
-(require "../utils.rkt"
+(require db 
+        "../utils.rkt"
          "../vc/date.rkt"
+         "../vc/select.rkt"
         "../store.rkt")
 
 (define (update-fields fields values)
   (for ([(key value) values])
-        
     (when (hash-has-key? fields key)
       (let ([field (hash-ref fields key)]
-            [str-value (if (number? value) 
-                           (number->string value) 
-                           value)])
+            [str-value (sqlvalue->string value)])
         (send field set-value str-value)))))
 
 (define (clear-fields fields)
@@ -23,7 +22,9 @@
          [keys (hash-keys fields)]
          [vals (map value keys)])
     (for/hash ([k keys] [v vals])
-      (values k v))))
+      (if (and v (not (eq? v "")))
+        (values k v)
+        (values k sql-null)))))
 
 (define (input label parent [style 'single])
   (let* ([container (new horizontal-panel%
@@ -41,6 +42,24 @@
                      [style (list style)])])
     field))
 
+(define (make-select label parent options)
+  (let* ([container (new horizontal-panel%
+                         [alignment (list 'right 'top)]
+                         [parent parent])]
+         [label (new message% [label label] 
+                     [parent container]
+                     [vert-margin 5]
+                     [font (make-object font%	11 'default)])]
+
+         [field (new select%
+                     [label #f]
+                     [choices options]
+                     [parent container]
+                     [stretchable-width #f]
+                     [min-width 310]
+                     )])
+    field))    
+
 (define (make-date label parent)
     (new date-field% [label label] [parent parent]))
 
@@ -50,7 +69,8 @@
        [choices '()]
        [style '(single column-headers)]
        [callback (lambda (l e)
-            (select-fn (send l get-string-selection)))]
+            (let ([selected (send l get-string-selection)])
+                (when selected (select-fn selected))))]
        [columns columns]
        [min-height 100]
        [stretchable-width #t]

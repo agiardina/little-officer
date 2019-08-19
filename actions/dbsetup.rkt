@@ -1,6 +1,7 @@
 #lang racket
 
 (require racket/serialize
+         "../eventbus.rkt"
          "../dbmanager.rkt"
          "../config.rkt")
 
@@ -9,7 +10,9 @@
 (define (restore-db-connection) 
     (cond
         [(file-exists? db-config-path) 
-            (db-connect (read (open-input-file db-config-path)))]
+            (begin 
+                (db-connect (read (open-input-file db-config-path)))
+                (dispatch "DBREADY"))]
         [else #f]))
 
 (define (save-db-connection
