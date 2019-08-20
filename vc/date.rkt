@@ -37,7 +37,13 @@
     (super-new)               
  
     (define/public (get-value)
-      #f)
+        (let ([d (send day get-selection)]
+              [m (send month get-selection)]
+              [y (+ (send year get-selection) 2000)])
+              
+            (with-handlers (((lambda (e) #t) (lambda (e) #f)))
+                (when (find-seconds 0 0 0 d m y) ;to validate the date
+                    (sql-date y m d)))))
  
     (define/public (set-value value)
         (cond 

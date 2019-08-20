@@ -60,4 +60,26 @@
 
         (apply query (flatten (list *conn* str-insert values)))))
 
+(define (update table record id-field) 
+    (let* (
+          [id-value (hash-ref record id-field)]
+          [f-list (hash->list (hash-remove record id-field))]
+          [keys (map car f-list)]
+          [values (map cdr f-list)]
+          [cols (map (lambda (c) (string-append c "= ?")) keys)]
+          [str-cols (string-join cols ",")]
+          [str-update (string-append "UPDATE " table " SET " str-cols " WHERE " id-field " = ?" )])
+
+          (apply query (flatten (list *conn* str-update values id-value)))))
+
+(define (save table record id-field)
+    (displayln record)
+    
+    (let ([id (hash-ref record id-field)] )
+        (cond 
+            [(or (false? id) (null? id) (sql-null? id) (and (string? id) (eq? "" id))) 
+                (insert table (hash-remove record id-field))]
+            [else 
+                (update table record id-field)])))
+
 (provide (all-defined-out))

@@ -19,9 +19,8 @@
 (define (get-deal-statuses id)
   (query->col (query *conn* "select * from deal_status order by position") "deal_status")) 
 
-
-(define (insert-deal fields)
-    (insert "deals" fields)
+(define (save-deal fields)
+    (save "deals" fields "id")
     (dispatch "NEWDEAL"))
 
 (provide (all-defined-out))
